@@ -136,8 +136,7 @@ int Master::Run()
 	SF_LOG_INFO("server.worldserver", "  \\ \\___  \\ \\  _'-\\ \\____ \\ \\  __\\ \\ \\ \\  __<\\ \\  __\\ ");
 	SF_LOG_INFO("server.worldserver", "   \\/\\_____\\ \\_\\ \\_\\/\\_____\\ \\_\\  \\ \\_\\ \\_\\ \\_\\ \\_____\\ ");
 	SF_LOG_INFO("server.worldserver", "    \\/_____/\\/_/\\/_/\\/_____/\\/_/   \\/_/\\/_/ /_/\\/_____/ ");
-	SF_LOG_INFO("server.worldserver", "  Project SkyFireEmu 2011 - 2017(c) Open-sourced Game Emulation ");
-	SF_LOG_INFO("server.worldserver", "           <http://www.projectskyfire.org/> \n");
+	SF_LOG_INFO("server.worldserver", "  Project MopCoreEmu 2011 - 2018(c) Open-sourced Game Emulation ");
 
 	///- Check the version of the configuration file
 	uint32 confVersion = sConfigMgr->GetIntDefault("ConfVersion", 0);

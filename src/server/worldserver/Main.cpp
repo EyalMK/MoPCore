@@ -35,7 +35,7 @@
 
 #ifndef _MOP_CORE_CONFIG
 # define _MOP_CORE_CONFIG  "worldserver.conf"
-#endif //_TRINITY_CORE_CONFIG
+#endif
 
 #ifdef _WIN32
 #include "ServiceWin32.h"
