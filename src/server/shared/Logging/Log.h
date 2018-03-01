@@ -23,81 +23,130 @@
 #include "Appender.h"
 #include "LogWorker.h"
 #include "Logger.h"
-
-#include <ace/Singleton.h>
+#include "Dynamic/UnorderedMap.h"
 
 #include <string>
-#include <set>
+#include <ace/Singleton.h>
+
+#define LOGGER_ROOT "root"
 
 class Log
 {
-    friend class ACE_Singleton<Log, ACE_Thread_Mutex>;
+	friend class ACE_Singleton<Log, ACE_Thread_Mutex>;
 
-    typedef std::map<uint8, Logger> LoggerMap;
+	typedef UNORDERED_MAP<std::string, Logger> LoggerMap;
 
-    private:
-        Log();
-        ~Log();
+private:
+	Log();
+	~Log();
 
-    public:
-        void LoadFromConfig();
-        void Close();
-        bool ShouldLog(LogFilterType type, LogLevel level) const;
-        bool SetLogLevel(std::string const& name, char const* level, bool isLogger = true);
+public:
+	void LoadFromConfig();
+	void Close();
+	bool ShouldLog(std::string const& type, LogLevel level) const;
+	bool SetLogLevel(std::string const& name, char const* level, bool isLogger = true);
 
-        void outTrace(LogFilterType f, char const* str, ...) ATTR_PRINTF(3,4);
-        void outDebug(LogFilterType f, char const* str, ...) ATTR_PRINTF(3,4);
-        void outInfo (LogFilterType f, char const* str, ...) ATTR_PRINTF(3,4);
-        void outWarn (LogFilterType f, char const* str, ...) ATTR_PRINTF(3,4);
-        void outError(LogFilterType f, char const* str, ...) ATTR_PRINTF(3,4);
-        void outFatal(LogFilterType f, char const* str, ...) ATTR_PRINTF(3,4);
-        void outArena( const char * str, ... )               ATTR_PRINTF(2, 3);
-        void outCommand( uint32 gm_account_id  , std::string gm_account_name,
-                         uint32 gm_character_id, std::string gm_character_name,
-                         uint32 sc_account_id  , std::string sc_account_name,
-                         uint32 sc_character_id, std::string sc_character_name,
-                         const char * str, ...)              ATTR_PRINTF(10,11);
-        void outGmChat( uint32 message_type,
-                        uint32 from_account_id  , std::string from_account_name,
-                        uint32 from_character_id, std::string from_character_name,
-                        uint32 to_account_id  , std::string to_account_name,
-                        uint32 to_character_id, std::string to_character_name,
-                        const char * str);
-        void outCharDump(char const* str, uint32 account_id, uint32 guid, char const* name);
+	void outTrace(std::string const& f, char const* str, ...) ATTR_PRINTF(3, 4);
+	void outDebug(std::string const& f, char const* str, ...) ATTR_PRINTF(3, 4);
+	void outInfo(std::string const& f, char const* str, ...) ATTR_PRINTF(3, 4);
+	void outWarn(std::string const& f, char const* str, ...) ATTR_PRINTF(3, 4);
+	void outError(std::string const& f, char const* str, ...) ATTR_PRINTF(3, 4);
+	void outFatal(std::string const& f, char const* str, ...) ATTR_PRINTF(3, 4);
 
-        void OutSpecialLog(const char* str, ...);
+	void outCommand(uint32 account, const char * str, ...) ATTR_PRINTF(3, 4);
+	void outCharDump(char const* str, uint32 account_id, uint32 guid, char const* name);
+	static std::string GetTimestampStr();
 
-        void EnableDBAppenders();
-        static std::string GetTimestampStr();
-        
-        void SetRealmID(uint32 id);
-        uint32 GetRealmID() const { return realm; }
+	void SetRealmId(uint32 id);
 
-    private:
-        void vlog(LogFilterType f, LogLevel level, char const* str, va_list argptr);
-        void write(LogMessage* msg);
+private:
+	void vlog(std::string const& f, LogLevel level, char const* str, va_list argptr);
+	void write(LogMessage* msg) const;
 
-        Logger* GetLoggerByType(LogFilterType filter);
-        Appender* GetAppenderByName(std::string const& name);
-        uint8 NextAppenderId();
-        void CreateAppenderFromConfig(const char* name);
-        void CreateLoggerFromConfig(const char* name);
-        void ReadAppendersFromConfig();
-        void ReadLoggersFromConfig();
+	Logger const* GetLoggerByType(std::string const& type) const;
+	Appender* GetAppenderByName(std::string const& name);
+	uint8 NextAppenderId();
+	void CreateAppenderFromConfig(std::string const& name);
+	void CreateLoggerFromConfig(std::string const& name);
+	void ReadAppendersFromConfig();
+	void ReadLoggersFromConfig();
 
-        AppenderMap appenders;
-        LoggerMap loggers;
-        uint8 AppenderId;
+	AppenderMap appenders;
+	LoggerMap loggers;
+	uint8 AppenderId;
 
-        std::string m_logsDir;
-        std::string m_logsTimestamp;
+	std::string m_logsDir;
+	std::string m_logsTimestamp;
 
-        uint32 realm;
-        LogWorker* worker;
-
-        FILE* specialLog;
+	LogWorker* worker;
 };
 
+inline Logger const* Log::GetLoggerByType(std::string const& type) const
+{
+	LoggerMap::const_iterator it = loggers.find(type);
+	if (it != loggers.end())
+		return &(it->second);
+
+	if (type == LOGGER_ROOT)
+		return NULL;
+
+	std::string parentLogger = LOGGER_ROOT;
+	size_t found = type.find_last_of(".");
+	if (found != std::string::npos)
+		parentLogger = type.substr(0, found);
+
+	return GetLoggerByType(parentLogger);
+}
+
+inline bool Log::ShouldLog(std::string const& type, LogLevel level) const
+{
+	// TODO: Use cache to store "Type.sub1.sub2": "Type" equivalence, should
+	// Speed up in cases where requesting "Type.sub1.sub2" but only configured
+	// Logger "Type"
+
+	Logger const* logger = GetLoggerByType(type);
+	if (!logger)
+		return false;
+
+	LogLevel logLevel = logger->getLogLevel();
+	return logLevel != LOG_LEVEL_DISABLED && logLevel <= level;
+}
+
 #define sLog ACE_Singleton<Log, ACE_Thread_Mutex>::instance()
+
+#if COMPILER != COMPILER_MICROSOFT
+#define SF_LOG_MESSAGE_BODY(level__, call__, filterType__, ...)     \
+        do {                                                        \
+            if (sLog->ShouldLog(filterType__, level__))             \
+                sLog->call__(filterType__, __VA_ARGS__);            \
+        } while (0)
+#else
+#define SF_LOG_MESSAGE_BODY(level__, call__, filterType__, ...)     \
+        __pragma(warning(push))                                     \
+        __pragma(warning(disable:4127))                             \
+        do {                                                        \
+            if (sLog->ShouldLog(filterType__, level__))             \
+                sLog->call__(filterType__, __VA_ARGS__);            \
+        } while (0)                                                 \
+        __pragma(warning(pop))
+#endif
+
+#define SF_LOG_TRACE(filterType__, ...) \
+    SF_LOG_MESSAGE_BODY(LOG_LEVEL_TRACE, outTrace, filterType__, __VA_ARGS__)
+
+#define SF_LOG_DEBUG(filterType__, ...) \
+    SF_LOG_MESSAGE_BODY(LOG_LEVEL_DEBUG, outDebug, filterType__, __VA_ARGS__)
+
+#define SF_LOG_INFO(filterType__, ...)  \
+    SF_LOG_MESSAGE_BODY(LOG_LEVEL_INFO, outInfo, filterType__, __VA_ARGS__)
+
+#define SF_LOG_WARN(filterType__, ...)  \
+    SF_LOG_MESSAGE_BODY(LOG_LEVEL_WARN, outWarn, filterType__, __VA_ARGS__)
+
+#define SF_LOG_ERROR(filterType__, ...) \
+    SF_LOG_MESSAGE_BODY(LOG_LEVEL_ERROR, outError, filterType__, __VA_ARGS__)
+
+#define SF_LOG_FATAL(filterType__, ...) \
+    SF_LOG_MESSAGE_BODY(LOG_LEVEL_FATAL, outFatal, filterType__, __VA_ARGS__)
 
 #endif

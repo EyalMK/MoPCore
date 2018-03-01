@@ -24,7 +24,17 @@
 #include "Define.h"
 #include "revision.h"
 
-#define _PACKAGENAME "MoPCore"
+#define _PACKAGENAME "MoPCore 5.x.x"
+
+// Format is YYYYMMDDRR where RR is the change in the conf file
+// for that day.
+
+#ifndef MOPCOREWORLD_CONFIG_VERSION
+# define MOPCOREWORLD_CONFIG_VERSION 2017091000
+#endif
+#ifndef MOPCOREAUTH_CONFIG_VERSION
+# define MOPCOREAUTH_CONFIG_VERSION 2017021900
+#endif
 
 #if TRINITY_ENDIAN == TRINITY_BIGENDIAN
 # define _ENDIAN_STRING "big-endian"

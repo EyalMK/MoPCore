@@ -70,6 +70,9 @@
 #  define ATTR_DEPRECATED
 #endif //COMPILER == COMPILER_GNU
 
+#define OVERRIDE override
+#define FINAL final
+
 #define UI64FMTD ACE_UINT64_FORMAT_SPECIFIER
 #define UI64LIT(N) ACE_UINT64_LITERAL(N)
 
