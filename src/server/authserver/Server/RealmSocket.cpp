@@ -1,20 +1,21 @@
 /*
- * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+* Copyright (C) 2008-2018 TrinityCore <http://www.trinitycore.org/>
+* Copyright (C) 2005-2018 MaNGOS <http://getmangos.com/>
+* Copyright (C) 2018-2018 MaxtorCoder <https://github.com/warsongkiller/>
+*
+* This program is free software; you can redistribute it and/or modify it
+* under the terms of the GNU General Public License as published by the
+* Free Software Foundation; either version 2 of the License, or (at your
+* option) any later version.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+* more details.
+*
+* You should have received a copy of the GNU General Public License along
+* with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <ace/OS_NS_string.h>
 #include <ace/INET_Addr.h>
@@ -61,7 +62,7 @@ int RealmSocket::open(void * arg)
 
     if (peer().get_remote_addr(addr) == -1)
     {
-        sLog->outError(LOG_FILTER_AUTHSERVER, "Error %s while opening realm socket!", ACE_OS::strerror(errno));
+		SF_LOG_ERROR("server.authserver", "Error %s while opening realm socket!", ACE_OS::strerror(errno));
         return -1;
     }
 
@@ -140,7 +141,11 @@ ssize_t RealmSocket::noblk_send(ACE_Message_Block &message_block)
         return -1;
 
     // Try to send the message directly.
+#ifndef MSG_NOSIGNAL
     ssize_t n = peer().send(message_block.rd_ptr(), len, MSG_NOSIGNAL);
+#else
+	ssize_t n = peer().send(message_block.rd.ptr(), len);
+#endif
 
     if (n < 0)
     {
@@ -286,8 +291,7 @@ int RealmSocket::handle_input(ACE_HANDLE)
 
 void RealmSocket::set_session(Session* session)
 {
-    if (session_ != NULL)
-        delete session_;
+    delete session_;
 
     session_ = session;
 }

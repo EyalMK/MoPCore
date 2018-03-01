@@ -40,23 +40,22 @@
 
 enum eAuthCmd
 {
-    AUTH_LOGON_CHALLENGE                         = 0x00,
-    AUTH_LOGON_PROOF                             = 0x01,
-    AUTH_RECONNECT_CHALLENGE                     = 0x02,
-    AUTH_RECONNECT_PROOF                         = 0x03,
-    AUTH_RECEIVE_AUTHENTICATOR_PIN               = 0x06,
-    REALM_LIST                                   = 0x10,
-    XFER_INITIATE                                = 0x30,
-    XFER_DATA                                    = 0x31,
-    XFER_ACCEPT                                  = 0x32,
-    XFER_RESUME                                  = 0x33,
-    XFER_CANCEL                                  = 0x34
+	AUTH_LOGON_CHALLENGE = 0x00,
+	AUTH_LOGON_PROOF = 0x01,
+	AUTH_RECONNECT_CHALLENGE = 0x02,
+	AUTH_RECONNECT_PROOF = 0x03,
+	REALM_LIST = 0x10,
+	XFER_INITIATE = 0x30,
+	XFER_DATA = 0x31,
+	XFER_ACCEPT = 0x32,
+	XFER_RESUME = 0x33,
+	XFER_CANCEL = 0x34
 };
 
 enum eStatus
 {
-    STATUS_CONNECTED                             = 0,
-    STATUS_AUTHED
+	STATUS_CONNECTED = 0,
+	STATUS_AUTHED
 };
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push, N), also any gcc version not support it at some paltform
@@ -68,81 +67,81 @@ enum eStatus
 
 typedef struct AUTH_LOGON_CHALLENGE_C
 {
-    uint8   cmd;
-    uint8   error;
-    uint16  size;
-    uint8   gamename[4];
-    uint8   version1;
-    uint8   version2;
-    uint8   version3;
-    uint16  build;
-    uint8   platform[4];
-    uint8   os[4];
-    uint8   country[4];
-    uint32  timezone_bias;
-    uint32  ip;
-    uint8   I_len;
-    uint8   I[1];
+	uint8   cmd;
+	uint8   error;
+	uint16  size;
+	uint8   gamename[4];
+	uint8   version1;
+	uint8   version2;
+	uint8   version3;
+	uint16  build;
+	uint8   platform[4];
+	uint8   os[4];
+	uint8   country[4];
+	uint32  timezone_bias;
+	uint32  ip;
+	uint8   I_len;
+	uint8   I[1];
 } sAuthLogonChallenge_C;
 
 typedef struct AUTH_LOGON_PROOF_C
 {
-    uint8   cmd;
-    uint8   A[32];
-    uint8   M1[20];
-    uint8   crc_hash[20];
-    uint8   number_of_keys;
-    uint8   securityFlags;                                  // 0x00-0x04
+	uint8   cmd;
+	uint8   A[32];
+	uint8   M1[20];
+	uint8   crc_hash[20];
+	uint8   number_of_keys;
+	uint8   securityFlags;                                  // 0x00-0x04
 } sAuthLogonProof_C;
 
 typedef struct AUTH_LOGON_PROOF_S
 {
-    uint8   cmd;
-    uint8   error;
-    uint8   M2[20];
-    uint32  unk1;
-    uint32  unk2;
-    uint16  unk3;
+	uint8   cmd;
+	uint8   error;
+	uint8   M2[20];
+	uint32  unk1;
+	uint32  unk2;
+	uint16  unk3;
 } sAuthLogonProof_S;
 
 typedef struct AUTH_LOGON_PROOF_S_OLD
 {
-    uint8   cmd;
-    uint8   error;
-    uint8   M2[20];
-    uint32  unk2;
+	uint8   cmd;
+	uint8   error;
+	uint8   M2[20];
+	uint32  unk2;
 } sAuthLogonProof_S_Old;
 
 typedef struct AUTH_RECONNECT_PROOF_C
 {
-    uint8   cmd;
-    uint8   R1[16];
-    uint8   R2[20];
-    uint8   R3[20];
-    uint8   number_of_keys;
+	uint8   cmd;
+	uint8   R1[16];
+	uint8   R2[20];
+	uint8   R3[20];
+	uint8   number_of_keys;
 } sAuthReconnectProof_C;
 
 typedef struct XFER_INIT
 {
-    uint8 cmd;                                              // XFER_INITIATE
-    uint8 fileNameLen;                                      // strlen(fileName);
-    uint8 fileName[5];                                      // fileName[fileNameLen]
-    uint64 file_size;                                       // file size (bytes)
-    uint8 md5[MD5_DIGEST_LENGTH];                           // MD5
+	uint8 cmd;                                              // XFER_INITIATE
+	uint8 fileNameLen;                                      // strlen(fileName);
+	uint8 fileName[5];                                      // fileName[fileNameLen]
+	uint64 file_size;                                       // file size (bytes)
+	uint8 md5[MD5_DIGEST_LENGTH];                           // MD5
 } XFER_INIT;
 
 typedef struct XFER_DATA
 {
-    uint8 opcode;
-    uint16 data_size;
-    uint8 data[ChunkSize];
+	uint8 opcode;
+	uint16 data_size;
+	uint8 data[ChunkSize];
 } XFER_DATA_STRUCT;
 
 typedef struct AuthHandler
 {
-    eAuthCmd cmd;
-    uint32 status;
-    bool (AuthSocket::*handler)(void);
+	eAuthCmd cmd;
+	uint32 status;
+	bool (AuthSocket::*handler)(void);
 } AuthHandler;
 
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some paltform
@@ -153,48 +152,48 @@ typedef struct AuthHandler
 #endif
 
 // Launch a thread to transfer a patch to the client
-class PatcherRunnable: public ACE_Based::Runnable
+class PatcherRunnable : public ACE_Based::Runnable
 {
 public:
-    PatcherRunnable(class AuthSocket*);
-    void run();
+	PatcherRunnable(class AuthSocket*);
+	void run();
 
 private:
-    AuthSocket* mySocket;
+	AuthSocket * mySocket;
 };
 
 typedef struct PATCH_INFO
 {
-    uint8 md5[MD5_DIGEST_LENGTH];
+	uint8 md5[MD5_DIGEST_LENGTH];
 } PATCH_INFO;
 
 // Caches MD5 hash of client patches present on the server
 class Patcher
 {
 public:
-    typedef std::map<std::string, PATCH_INFO*> Patches;
-    ~Patcher();
-    Patcher();
-    Patches::const_iterator begin() const { return _patches.begin(); }
-    Patches::const_iterator end() const { return _patches.end(); }
-    void LoadPatchMD5(char*);
-    bool GetHash(char * pat, uint8 mymd5[16]);
+	typedef std::map<std::string, PATCH_INFO*> Patches;
+	~Patcher();
+	Patcher();
+	Patches::const_iterator begin() const { return _patches.begin(); }
+	Patches::const_iterator end() const { return _patches.end(); }
+	void LoadPatchMD5(char*);
+	bool GetHash(char * pat, uint8 mymd5[16]);
 
 private:
-    void LoadPatchesInfo();
-    Patches _patches;
+	void LoadPatchesInfo();
+	Patches _patches;
 };
 
 const AuthHandler table[] =
 {
-    { AUTH_LOGON_CHALLENGE,     STATUS_CONNECTED, &AuthSocket::_HandleLogonChallenge    },
-    { AUTH_LOGON_PROOF,         STATUS_CONNECTED, &AuthSocket::_HandleLogonProof        },
-    { AUTH_RECONNECT_CHALLENGE, STATUS_CONNECTED, &AuthSocket::_HandleReconnectChallenge},
-    { AUTH_RECONNECT_PROOF,     STATUS_CONNECTED, &AuthSocket::_HandleReconnectProof    },
-    { REALM_LIST,               STATUS_AUTHED,    &AuthSocket::_HandleRealmList         },
-    { XFER_ACCEPT,              STATUS_CONNECTED, &AuthSocket::_HandleXferAccept        },
-    { XFER_RESUME,              STATUS_CONNECTED, &AuthSocket::_HandleXferResume        },
-    { XFER_CANCEL,              STATUS_CONNECTED, &AuthSocket::_HandleXferCancel        }
+	{ AUTH_LOGON_CHALLENGE,     STATUS_CONNECTED, &AuthSocket::_HandleLogonChallenge },
+{ AUTH_LOGON_PROOF,         STATUS_CONNECTED, &AuthSocket::_HandleLogonProof },
+{ AUTH_RECONNECT_CHALLENGE, STATUS_CONNECTED, &AuthSocket::_HandleReconnectChallenge },
+{ AUTH_RECONNECT_PROOF,     STATUS_CONNECTED, &AuthSocket::_HandleReconnectProof },
+{ REALM_LIST,               STATUS_AUTHED,    &AuthSocket::_HandleRealmList },
+{ XFER_ACCEPT,              STATUS_CONNECTED, &AuthSocket::_HandleXferAccept },
+{ XFER_RESUME,              STATUS_CONNECTED, &AuthSocket::_HandleXferResume },
+{ XFER_CANCEL,              STATUS_CONNECTED, &AuthSocket::_HandleXferCancel }
 };
 
 #define AUTH_TOTAL_COMMANDS 8
@@ -204,10 +203,11 @@ Patcher PatchesCache;
 
 // Constructor - set the N and g values for SRP6
 AuthSocket::AuthSocket(RealmSocket& socket) :
-    pPatch(NULL), socket_(socket), _authed(false), _build(0)
+	pPatch(NULL), socket_(socket), _authed(false), _build(0),
+	_expversion(0), _accountSecurityLevel(SEC_PLAYER)
 {
-    N.SetHexStr("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7");
-    g.SetDword(7);
+	N.SetHexStr("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7");
+	g.SetDword(7);
 }
 
 // Close patch file descriptor before leaving
